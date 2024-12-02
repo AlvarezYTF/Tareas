@@ -6,7 +6,7 @@ class ControladorEtiqueta:
         self.vista = vista
 
     # Función para ejecutar las opciones
-    def ejecutar(self):  # sourcery skip: low-code-quality
+    def ejecutar(self):
         # Se llama del script modelo para crear la tabla en BD
         self.modelo.crear_tabla()
         self.modelo.crear_tabla_tarea_etiqueta()
@@ -16,28 +16,21 @@ class ControladorEtiqueta:
             # Match para manejar diferentes opciones
             match self.vista.obtener_opcion_menu():
                 case "1":  # Agregar etiqueta
-                    try:
-                        while True:
-                            # Se llama a la vista para obtener el nombre y la descripción
-                            nombre, descripcion = self.vista.obtener_datos_etiqueta()
-                            # Validar si el nombre existe llamando al modelo
-                            if self.modelo.validar_existencia_nombre(nombre):
-                                # Bucle para que el usuario ingrese un nombre diferente
-                                while True:
-                                    nombre = self.vista.obtener_nombre_valido()
-                                    if not self.modelo.validar_existencia_nombre(
-                                        nombre
-                                    ):
-                                        break
-                            # Agregar la etiqueta con el nombre nuevo
-                            self.modelo.agregar_etiqueta(nombre, descripcion)
+                    intentos = 3
+                    while intentos > 0:
+                        nombre = self.vista.obtener_datos_etiquetas()
+                        if self.modelo.validar_existencia_nombre(nombre):
+                            self.vista.mostrar_mensaje("El nombre ya existe.")
+                            intentos -= 1
+                        else:
+                            self.modelo.agregar_etiqueta(nombre)
                             self.vista.mostrar_mensaje(
                                 "¡Etiqueta agregada correctamente!"
                             )
                             break
-                    except Exception as e:
+                    if intentos == 0:
                         self.vista.mostrar_mensaje(
-                            f"Error al agregar la etiqueta: typeError({e})"
+                            "Intentos agotados. Regresando al menú."
                         )
                 case "2":  # Ver etiquetas
                     try:
@@ -48,55 +41,56 @@ class ControladorEtiqueta:
                             f"Error al mostrar las etiquetas: typeError({e})"
                         )
                 case "3":  # Actualizar estado de etiqueta
-                    try:
-                        while True:
-                            id_etiqueta = self.vista.obtener_id_etiqueta()
-                            if id_etiqueta > 0:
-                                if self.modelo.validar_id(id_etiqueta):
-                                    while True:
-                                        nuevo_estado = self.vista.obtener_nuevo_estado()
-                                        if self.modelo.validar_nuevo_estado(
-                                            nuevo_estado
-                                        ):
-                                            self.modelo.actualizar_estado_etiqueta(
-                                                id_etiqueta, nuevo_estado
-                                            )
-                                            self.vista.mostrar_mensaje(
-                                                "¡Estado de la etiqueta actualizado!"
-                                            )
-                                            break
-                                        else:
-                                            print(
-                                                "Estado no válido, ingrese activo/inactivo"
-                                            )
-                                    break
-                                else:
-                                    self.vista.mostrar_mensaje("ID no encontrado")
-                            else:
-                                self.vista.mostrar_mensaje(
-                                    "Ingrese un número mayor que cero"
-                                )
-                    except TypeError as e:
-                        self.vista.mostrar_mensaje("Número de ID no válido")
-                case "4":  # Eliminar etiqueta
-                    try:
-                        while True:
-                            id_etiqueta = self.vista.obtener_id_etiqueta()
-                            if id_etiqueta > 0:
-                                if self.modelo.validar_id(id_etiqueta):
-                                    self.modelo.eliminar_etiqueta(id_etiqueta)
+                    intentos = 3
+                    while intentos > 0:
+                        id_etiqueta = self.vista.obtener_id_etiqueta()
+                        if id_etiqueta > 0 and self.modelo.validar_id(id_etiqueta):
+                            while True:
+                                nuevo_estado = self.vista.obtener_nuevo_estado()
+                                if self.modelo.validar_nuevo_estado(nuevo_estado):
+                                    bool_estado = self.modelo.cambiar_estado_booleano(
+                                        nuevo_estado
+                                    )
+                                    self.modelo.actualizar_etiqueta(
+                                        id_etiqueta, bool_estado
+                                    )
                                     self.vista.mostrar_mensaje(
-                                        "¡Etiqueta eliminada correctamente!"
+                                        "¡Estado de la etiqueta actualizado!"
                                     )
                                     break
                                 else:
-                                    self.vista.mostrar_mensaje("ID no encontrado")
-                            else:
-                                self.vista.mostrar_mensaje(
-                                    "Ingrese un número mayor que cero"
-                                )
-                    except TypeError as e:
-                        self.vista.mostrar_mensaje("Número de ID no válido")
+                                    self.vista.mostrar_mensaje(
+                                        "Estado no válido, ingrese activo/inactivo"
+                                    )
+                            break
+                        else:
+                            self.vista.mostrar_mensaje(
+                                "ID no válido. Intente de nuevo."
+                            )
+                            intentos -= 1
+                    if intentos == 0:
+                        self.vista.mostrar_mensaje(
+                            "Intentos agotados. Regresando al menú."
+                        )
+                case "4":  # Eliminar etiqueta
+                    intentos = 3
+                    while intentos > 0:
+                        id_etiqueta = self.vista.obtener_id_etiqueta()
+                        if id_etiqueta > 0 and self.modelo.validar_id(id_etiqueta):
+                            self.modelo.eliminar_etiqueta(id_etiqueta)
+                            self.vista.mostrar_mensaje(
+                                "¡Etiqueta eliminada correctamente!"
+                            )
+                            break
+                        else:
+                            self.vista.mostrar_mensaje(
+                                "ID no válido. Intente de nuevo."
+                            )
+                            intentos -= 1
+                    if intentos == 0:
+                        self.vista.mostrar_mensaje(
+                            "Intentos agotados. Regresando al menú."
+                        )
                 case "5":  # Salir
                     self.vista.mostrar_mensaje(
                         "Saliendo del gestor de etiquetas. ¡Hasta pronto!"

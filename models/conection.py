@@ -14,7 +14,6 @@ class Conection:
             )
             if not self.conn.is_connected():
                 raise Error("No se pudo establecer la conexión.")
-            print("Conexión exitosa a la base de datos.")
             self.cursor = self.conn.cursor()
             self.commit = self.conn.commit()
         except Error as e:
